@@ -1,90 +1,107 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const UserSchema = new mongoose.Schema({
+const Student = sequelize.define('Student', {
+
+    id:{
+        type: DataTypes.INTEGER,
+        autoIncrement:true,
+        primaryKey:true
+    },
+
     name:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     email:{
-        type: String,
-        required: true,
-        unique: true
+        type: DataTypes.STRING,
+        allowNull:false,
+        unique:true
     },
-    password:{ 
-        type: String,
-        required: true
+
+    password:{
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     PRN:{
-        type: String,
-        required: true,
-        unique: true
+        type: DataTypes.STRING,
+        allowNull:false,
+        unique:true
     },
+
     branch:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     year:{
-        type: Number,
-        required: true
+        type: DataTypes.INTEGER,
+        allowNull:false
     },
-    SGPA:{
-        type: [Number],
-        default: []
-    },
+
     CGPA:{
-        type: Number,
-        default: 0
+        type: DataTypes.FLOAT,
+        defaultValue:0
     },
-    roomNumber:{
-        type: String,
-        required: true
-    },
+
     contactNumber:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     permanentAddress:{
-        type: String,
-        required: true
+        type: DataTypes.TEXT,
+        allowNull:false
     },
+
     currentAddress:{
-        type: String,
-        required: true
+        type: DataTypes.TEXT,
+        allowNull:false
     },
+
     profilePicture:{
-        type: String,
-        default: ''
+        type: DataTypes.STRING
     },
+
     parentName:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     parentEmail:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     parentContactNumber:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     guardianName:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     guardianEmail:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
+
     guardianContactNumber:{
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull:false
     },
-    guardianAdress:{
-        type: String,
-        required: true
-    },
-    
-}, { timestamps: true });
 
+    guardianAddress:{
+        type: DataTypes.TEXT,
+        allowNull:false
+    }
 
-module.exports = mongoose.model('Student', UserSchema);
+},{
+    timestamps:true
+});
+
+module.exports = Student;

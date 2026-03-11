@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Warden = sequelize.define('Warden',{
+const Room = sequelize.define('Room',{
 
     id:{
         type:DataTypes.INTEGER,
@@ -9,33 +9,29 @@ const Warden = sequelize.define('Warden',{
         primaryKey:true
     },
 
-    name:{
+    roomNumber:{
+        type:DataTypes.STRING,
+        unique:true,
+        allowNull:false
+    },
+
+    block:{
         type:DataTypes.STRING,
         allowNull:false
     },
 
-    email:{
-        type:DataTypes.STRING,
-        allowNull:false,
-        unique:true
-    },
-
-    password:{
-        type:DataTypes.STRING,
+    floor:{
+        type:DataTypes.INTEGER,
         allowNull:false
     },
 
-    contactNumber:{
-        type:DataTypes.STRING,
-        allowNull:false
-    },
-
-    profilePicture:{
-        type:DataTypes.STRING
+    capacity:{
+        type:DataTypes.INTEGER,
+        defaultValue:3
     }
 
 },{
     timestamps:true
 });
 
-module.exports = Warden;
+module.exports = Room;

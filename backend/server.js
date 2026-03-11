@@ -6,33 +6,46 @@ dotenv.config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { sequelize } = require('./models');
 
-// Import database connection
-const connectDB = require('./config/db');
 
 // Import routes
 const authRoutes = require('./routes/auth');
 
-// Connect to the database
-connectDB();
 
 // Initialize Express app
 const app = express();
 
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+
 app.use(express.json());
-app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 
 // Routes
 app.use('/api/auth', authRoutes);
 
 
-// Start the server
+
+// Database Connection + Server Start
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+
+sequelize.sync({ alter: true })
+.then(() => {
+
+    console.log("Database connected successfully");
+
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+
+})
+.catch((err) => {
+    console.error("Database connection failed:", err);
 });
