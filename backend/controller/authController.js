@@ -1,5 +1,5 @@
 const { Student, Warden } = require('../models');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 
@@ -8,16 +8,21 @@ const { Op } = require('sequelize');
 exports.userRegister = async (req, res) => {
     try {
 
-        const { name, email, password } = req.body;
+        const { name, email, password, PRN } = req.body;
 
         // Validate input
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !PRN) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Check existing user
+        // Check existing user by checking if email or PRN exist
         const existingUser = await Student.findOne({
-            where: { email }
+            where: {
+                [Op.or]: [
+                    { email },
+                    { PRN }
+                ]
+            }
         });
 
         if (existingUser) {
@@ -31,13 +36,14 @@ exports.userRegister = async (req, res) => {
         await Student.create({
             name,
             email,
+            PRN,
             password: hashedPassword
         });
 
         res.status(201).json({ message: 'User registered successfully' });
 
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
@@ -89,7 +95,7 @@ exports.userLogin = async (req, res) => {
         }).status(200).json({ message: 'Login successful' });
 
     } catch (error) {
-        res.status(500).json({ message: 'Internal Server error' });
+        res.status(500).json({ message: 'Internal Server error', error: error.message });
     }
 };
 

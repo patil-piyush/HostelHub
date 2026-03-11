@@ -10,7 +10,7 @@ const { sequelize } = require('./models');
 
 
 // Import routes
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/authRoute');
 
 
 // Initialize Express app

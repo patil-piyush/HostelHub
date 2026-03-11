@@ -33,12 +33,12 @@ const Student = sequelize.define('Student', {
 
     branch:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     year:{
         type: DataTypes.INTEGER,
-        allowNull:false
+        allowNull:true
     },
 
     CGPA:{
@@ -48,56 +48,57 @@ const Student = sequelize.define('Student', {
 
     contactNumber:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     permanentAddress:{
         type: DataTypes.TEXT,
-        allowNull:false
+        allowNull:true
     },
 
     currentAddress:{
         type: DataTypes.TEXT,
-        allowNull:false
+        allowNull:true
     },
 
     profilePicture:{
-        type: DataTypes.STRING
+        type: DataTypes.STRING,
+        allowNull:true
     },
 
     parentName:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     parentEmail:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     parentContactNumber:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     guardianName:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     guardianEmail:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     guardianContactNumber:{
         type: DataTypes.STRING,
-        allowNull:false
+        allowNull:true
     },
 
     guardianAddress:{
         type: DataTypes.TEXT,
-        allowNull:false
+        allowNull:true
     }
 
 },{
