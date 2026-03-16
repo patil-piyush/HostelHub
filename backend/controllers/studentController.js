@@ -45,6 +45,8 @@ exports.updateProfile = async (req, res) => {
             return res.status(404).json({ message: "Student not found" });
         }
 
+        student.exclude = ["password", "createdAt", "updatedAt", "RoomId", "RoomNumber"];
+
         await student.update(req.body);
 
         res.json({
