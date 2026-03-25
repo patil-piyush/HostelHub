@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import StatsCard from "@/components/StatsCard";
-import API from "../../../api";
+import API from "@/api";
 import { BedDouble, FileText, MessageSquare, MoveRight, ArrowUpRight } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import axios from "axios";
 
 
 API.interceptors.request.use((config) => {

@@ -17,6 +17,7 @@ import LeaveApplication from "./pages/student/LeaveApplication";
 import ComplaintSystem from "./pages/student/ComplaintSystem";
 import RoomAllocation from "./pages/student/RoomAllocation";
 import StudentProfile from "./pages/student/StudentProfile";
+import EditProfile from "./pages/student/EditProfile";
 
 // Warden pages
 import WardenDashboard from "./pages/warden/WardenDashboard";
@@ -51,7 +52,7 @@ function AppRoutes() {
       <Route path="/student/complaints" element={<ProtectedRoute allowedRoles={["student"]}><ComplaintSystem /></ProtectedRoute>} />
       <Route path="/student/room" element={<ProtectedRoute allowedRoles={["student"]}><RoomAllocation /></ProtectedRoute>} />
       <Route path="/student/profile" element={<ProtectedRoute allowedRoles={["student"]}><StudentProfile /></ProtectedRoute>} />
-
+      <Route path="/student/profile/edit" element={<ProtectedRoute allowedRoles={["student"]}><EditProfile /></ProtectedRoute>} />
       {/* Warden */}
       <Route path="/warden" element={<ProtectedRoute allowedRoles={["warden"]}><WardenDashboard /></ProtectedRoute>} />
       <Route path="/warden/movement" element={<ProtectedRoute allowedRoles={["warden"]}><WardenDashboard /></ProtectedRoute>} />

@@ -14,12 +14,22 @@ const sequelize = require('../config/database');
 // PROFILE 
 
 exports.getProfile = async (req, res) => {
-
     try {
-
         const student = await Student.findByPk(req.user.id, {
-            attributes: { exclude: ["password"] },
-            include: [Room]
+            attributes: {
+                exclude: [
+                    "password",
+                    "createdAt",
+                    "updatedAt",
+                    "RoomId"
+                ]
+            },
+            include: [
+                {
+                    model: Room,
+                    attributes: ["roomNumber"] // only required data
+                }
+            ]
         });
 
         if (!student) {
@@ -29,37 +39,98 @@ exports.getProfile = async (req, res) => {
         res.json(student);
 
     } catch (error) {
+        console.error("GET PROFILE ERROR:", error);
         res.status(500).json({ message: error.message });
     }
-
 };
 
 
 exports.updateProfile = async (req, res) => {
-
     try {
-
         const student = await Student.findByPk(req.user.id);
 
         if (!student) {
             return res.status(404).json({ message: "Student not found" });
         }
 
-        student.exclude = ["password", "createdAt", "updatedAt", "RoomId", "RoomNumber"];
+        // ✅ Only allow valid fields (VERY IMPORTANT)
+        const allowedFields = [
+            "name",
+            "email",
+            "contactNumber",
+            "branch",
+            "year",
+            "CGPA",
+            "permanentAddress",
+            "currentAddress",
+            "parentName",
+            "parentEmail",
+            "parentContactNumber",
+            "guardianName",
+            "guardianEmail",
+            "guardianContactNumber",
+            "guardianAddress"
+        ];
 
-        await student.update(req.body);
+        const updateData = {};
+
+        allowedFields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+
+                let value = req.body[field];
+
+                // ✅ Convert CGPA safely
+                if (field === "CGPA") {
+                    value = Number(value);
+                    if (isNaN(value)) return; // skip invalid
+                }
+
+                // ✅ Avoid empty strings
+                if (value !== "") {
+                    updateData[field] = value;
+                }
+            }
+        });
+
+        await student.update(updateData);
+        
+        console.log("REQ BODY:", req.body);
+
+        // ✅ Optional: auto profile completion logic
+        const isComplete = allowedFields.every(
+            (field) => student[field] !== null && student[field] !== ""
+        );
+
+        student.profileCompleted = isComplete;
+        await student.save();
+
+        // ✅ Return clean response
+        const updatedStudent = await Student.findByPk(req.user.id, {
+            attributes: {
+                exclude: [
+                    "password",
+                    "createdAt",
+                    "updatedAt",
+                    "RoomId"
+                ]
+            },
+            include: [
+                {
+                    model: Room,
+                    attributes: ["roomNumber"]
+                }
+            ]
+        });
 
         res.json({
             message: "Profile updated successfully",
-            student
+            student: updatedStudent
         });
 
     } catch (error) {
-
+        console.error("UPDATE PROFILE ERROR:", error);
         res.status(500).json({ error: error.message });
-
     }
-
 };
 
 
