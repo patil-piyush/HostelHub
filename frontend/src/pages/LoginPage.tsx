@@ -10,14 +10,12 @@ const roles: { value: UserRole; label: string; desc: string }[] = [
   { value: "student", label: "Student", desc: "Resident student" },
   { value: "warden", label: "Warden", desc: "Block in-charge" },
   { value: "admin", label: "Admin", desc: "System administrator" },
-  { value: "maintenance", label: "Maintenance", desc: "Staff member" },
 ];
 
 const roleRoutes: Record<UserRole, string> = {
   student: "/student",
   warden: "/warden",
   admin: "/admin",
-  maintenance: "/maintenance",
 };
 
 export default function LoginPage() {

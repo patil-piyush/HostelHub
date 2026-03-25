@@ -267,7 +267,7 @@ exports.updateLeaveApplicationStatus = async (req, res) => {
 
         leave.status = status;
         leave.decisionAt = new Date();
-        leave.WardenId = req.user.id;
+        leave.WardenId = req.warden.id;
 
         await leave.save();
 

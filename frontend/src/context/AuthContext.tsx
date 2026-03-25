@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type UserRole = "student" | "warden" | "admin" | "maintenance";
+export type UserRole = "student" | "warden" | "admin";
 
 interface User {
   id: string;
@@ -23,7 +23,6 @@ const mockUsers: Record<UserRole, User> = {
   student: { id: "1", name: "Arjun Sharma", email: "arjun@hostel.edu", role: "student", room: "A-204" },
   warden: { id: "2", name: "Dr. Priya Mehta", email: "warden@hostel.edu", role: "warden" },
   admin: { id: "3", name: "Admin Kumar", email: "admin@hostel.edu", role: "admin" },
-  maintenance: { id: "4", name: "Raj Singh", email: "maint@hostel.edu", role: "maintenance" },
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
