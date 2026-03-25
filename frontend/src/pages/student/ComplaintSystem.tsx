@@ -6,14 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare, Send } from "lucide-react";
-
+import API from "@/api";
+import { useEffect } from "react";
 const categories = ["Electrical", "Water", "Internet", "Cleaning", "Other"];
 
-const complaints = [
-  { id: "C001", category: "Electrical", room: "A-204", status: "Resolved", staff: "Raj Singh", desc: "Light not working" },
-  { id: "C002", category: "Water", room: "A-204", status: "In Progress", staff: "Unassigned", desc: "Tap leakage" },
-  { id: "C003", category: "Internet", room: "A-204", status: "Open", staff: "Unassigned", desc: "WiFi disconnecting" },
-];
 
 const statusClass: Record<string, string> = {
   Open: "status-badge-open",
@@ -35,11 +31,36 @@ export default function ComplaintSystem() {
   const [desc, setDesc] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [complaints, setComplaints] = useState<any[]>([]);
+
+  // ONLY LOGIC CHANGES
+
+  useEffect(() => {
+    API.get("/student/complaints")
+      .then(res => setComplaints(res.data))
+      .catch(console.error);
+  }, []);
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setCategory(""); setDesc("");
+
+    try {
+      await API.post("/student/complaints", {
+        title: category,
+        category,
+        description: desc
+      });
+
+      setSubmitted(true);
+      setCategory("");
+      setDesc("");
+
+      const res = await API.get("/student/complaints");
+      setComplaints(res.data);
+
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -123,7 +144,7 @@ export default function ComplaintSystem() {
                   <tr key={c.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 text-sm text-primary font-mono">{c.id}</td>
                     <td className={`px-6 py-4 text-sm font-medium ${catColor[c.category]}`}>{c.category}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate">{c.desc}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate">{c.description}</td>
                     <td className="px-6 py-4"><span className={statusClass[c.status]}>{c.status}</span></td>
                     <td className="px-6 py-4 text-sm text-foreground">{c.staff}</td>
                   </tr>

@@ -2,31 +2,40 @@ import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { BedDouble, CheckCircle, Users, Building2, Star } from "lucide-react";
+import API from "@/api";
+import { useEffect } from "react";
 
-const rooms = [
-  { num: "A-101", floor: "Ground", beds: 2, available: 1, type: "Double", features: ["AC", "WiFi"] },
-  { num: "A-201", floor: "1st Floor", beds: 2, available: 2, type: "Double", features: ["AC", "WiFi", "Balcony"] },
-  { num: "A-202", floor: "1st Floor", beds: 1, available: 0, type: "Single", features: ["AC", "WiFi"] },
-  { num: "A-301", floor: "2nd Floor", beds: 3, available: 1, type: "Triple", features: ["WiFi"] },
-  { num: "A-302", floor: "2nd Floor", beds: 2, available: 2, type: "Double", features: ["AC", "WiFi", "City View"] },
-  { num: "B-101", floor: "Ground", beds: 2, available: 1, type: "Double", features: ["WiFi"] },
-  { num: "B-201", floor: "1st Floor", beds: 1, available: 1, type: "Single", features: ["AC", "WiFi", "Premium"] },
-  { num: "B-301", floor: "2nd Floor", beds: 2, available: 0, type: "Double", features: ["AC"] },
-];
 
 export default function RoomAllocation() {
   const [selected, setSelected] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const cgpa = 8.7;
   const eligible = cgpa >= 7.5;
+  const [rooms, setRooms] = useState<any[]>([]);
+
+  useEffect(() => {
+    API.get("/student/rooms")
+      .then(res => setRooms(res.data))
+      .catch(console.error);
+  }, []);
+  
+  const handleConfirm = async () => {
+    try {
+      await API.post("/student/select-room", {
+        roomNumber: selected
+      });
+  
+      setConfirmed(true);
+  
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   const handleSelect = (roomNum: string) => {
     if (!eligible) return;
     setSelected(roomNum);
-  };
-
-  const handleConfirm = () => {
-    setConfirmed(true);
   };
 
   return (
@@ -81,17 +90,16 @@ export default function RoomAllocation() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {rooms.map((room) => {
-              const isFull = room.available === 0;
-              const isSelected = selected === room.num;
+              const isFull = room.occupiedBeds >= room.capacity;
+              const isSelected = selected === room.roomNumber;
               return (
                 <div
-                  key={room.num}
-                  className={`card-elevated rounded-xl p-5 transition-all duration-300 ${
-                    isFull ? "opacity-50 cursor-not-allowed" :
+                  key={room.roomNumber}
+                  className={`card-elevated rounded-xl p-5 transition-all duration-300 ${isFull ? "opacity-50 cursor-not-allowed" :
                     isSelected ? "border-primary shadow-glow-yellow cursor-pointer" :
-                    "hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer"
-                  }`}
-                  onClick={() => !isFull && handleSelect(room.num)}
+                      "hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer"
+                    }`}
+                  onClick={() => !isFull && handleSelect(room.roomNumber)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -105,7 +113,7 @@ export default function RoomAllocation() {
                   <div className="flex items-center gap-1.5 mt-2">
                     <Users className="w-3 h-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      <span className={room.available > 0 ? "text-green-400 font-medium" : "text-muted-foreground"}>{room.available}</span> / {room.beds} beds
+                      <span className={(room.capacity - room.occupiedBeds) > 0 ? "text-green-400 font-medium" : "text-muted-foreground"}>{room.capacity - room.occupiedBeds}</span> / {room.beds} beds
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-3">

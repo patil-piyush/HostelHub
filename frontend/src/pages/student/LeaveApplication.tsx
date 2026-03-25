@@ -5,13 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, Calendar, Send } from "lucide-react";
+import API from "@/api";
+import { useEffect } from "react";
 
-const leaveHistory = [
-  { id: "L001", date: "Dec 15–18, 2024", duration: "3 days", reason: "Family function", status: "Approved" },
-  { id: "L002", date: "Nov 22–23, 2024", duration: "1 day", reason: "Medical checkup", status: "Approved" },
-  { id: "L003", date: "Nov 10–11, 2024", duration: "2 days", reason: "Personal work", status: "Rejected" },
-  { id: "L004", date: "Jan 3–5, 2025", duration: "3 days", reason: "New Year holiday", status: "Pending" },
-];
+
 
 const statusClass: Record<string, string> = {
   Approved: "status-badge-approved",
@@ -25,12 +22,39 @@ export default function LeaveApplication() {
   const [reason, setReason] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
+
+  // ONLY CHANGES SHOWN — KEEP UI SAME
+
+  useEffect(() => {
+    API.get("/student/leave")
+      .then(res => setLeaveHistory(res.data))
+      .catch(console.error);
+  }, []);
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFrom(""); setTo(""); setReason("");
+
+    try {
+      await API.post("/student/leave", {
+        startDate: from,
+        endDate: to,
+        reason,
+      });
+
+      setSubmitted(true);
+      setFrom("");
+      setTo("");
+      setReason("");
+
+      const res = await API.get("/student/leave");
+      setLeaveHistory(res.data);
+
+    } catch (err) {
+      console.error(err);
+    }
   };
+
 
   return (
     <DashboardLayout>
@@ -111,8 +135,11 @@ export default function LeaveApplication() {
                 {leaveHistory.map((row) => (
                   <tr key={row.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 text-sm text-primary font-mono">{row.id}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{row.date}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{row.duration}</td>
+                    <td>{new Date(row.startDate).toLocaleDateString()}</td>
+                    <td>
+                      {new Date(row.startDate).toLocaleDateString()} - {new Date(row.endDate).toLocaleDateString()}
+                    </td>
+                    {/* <td className="px-6 py-4 text-sm text-muted-foreground">{row.duration}</td> */}
                     <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">{row.reason}</td>
                     <td className="px-6 py-4"><span className={statusClass[row.status]}>{row.status}</span></td>
                   </tr>

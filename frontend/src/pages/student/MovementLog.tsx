@@ -1,15 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowUpCircle, ArrowDownCircle, Clock } from "lucide-react";
-
-const movementHistory = [
-  { date: "Dec 20, 2024", timeOut: "09:00 AM", timeIn: "06:30 PM", status: "Returned" },
-  { date: "Dec 19, 2024", timeOut: "11:30 AM", timeIn: "08:00 PM", status: "Returned" },
-  { date: "Dec 18, 2024", timeOut: "08:00 AM", timeIn: "—", status: "Outside" },
-  { date: "Dec 17, 2024", timeOut: "02:00 PM", timeIn: "10:00 PM", status: "Returned" },
-  { date: "Dec 16, 2024", timeOut: "10:00 AM", timeIn: "05:00 PM", status: "Returned" },
-];
+import API from "@/api";
 
 const statusColor: Record<string, string> = {
   Returned: "status-badge-approved",
@@ -18,9 +11,51 @@ const statusColor: Record<string, string> = {
 
 export default function MovementLog() {
   const [status, setStatus] = useState<"in" | "out">("in");
+  const [movementHistory, setMovementHistory] = useState<any[]>([]);
 
-  const handleCheckout = () => setStatus("out");
-  const handleCheckin = () => setStatus("in");
+  const fetchData = async () => {
+    try {
+      const res = await API.get("/student/movement");
+
+      const formatted = res.data.map((m: any) => ({
+        date: new Date(m.createdAt).toLocaleDateString(),
+        timeOut: m.outTime ? new Date(m.outTime).toLocaleTimeString() : "—",
+        timeIn: m.inTime ? new Date(m.inTime).toLocaleTimeString() : "—",
+        status: m.status === "OUT" ? "Outside" : "Returned"
+      }));
+
+      setMovementHistory(formatted);
+
+      if (res.data.length > 0) {
+        setStatus(res.data[0].status === "OUT" ? "out" : "in");
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleCheckout = async () => {
+    try {
+      await API.post("/student/movement/out", { reason: "Going out" });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCheckin = async () => {
+    try {
+      await API.post("/student/movement/in");
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <DashboardLayout>
