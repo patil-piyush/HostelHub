@@ -237,38 +237,38 @@ exports.generateMeritList = async (req, res) => {
 // ================= SET ELIGIBLE =================
 exports.setEligibleStudents = async (req, res) => {
     try {
-      const { cycleId, eligibleCount } = req.body;
-  
-      const cycle = await getCycleOrThrow(cycleId);
-  
-      if (cycle.status !== "merit_generated") {
-        return res.status(400).json({
-          message: "Set eligibility after merit generation"
+        const { cycleId, eligibleCount } = req.body;
+
+        const cycle = await getCycleOrThrow(cycleId);
+
+        if (cycle.status !== "merit_generated") {
+            return res.status(400).json({
+                message: "Set eligibility after merit generation"
+            });
+        }
+
+        const allocations = await StudentAllocation.findAll({
+            where: { AllocationCycleId: cycleId },
+            order: [["rank", "ASC"]]
         });
-      }
-  
-      const allocations = await StudentAllocation.findAll({
-        where: { AllocationCycleId: cycleId },
-        order: [["rank", "ASC"]]
-      });
-  
-      allocations.forEach((a, i) => {
-        a.status = i < eligibleCount ? "eligible" : "waiting";
-      });
-  
-      await Promise.all(allocations.map(a => a.save()));
-  
-      cycle.eligibleStudents = eligibleCount;
-      cycle.status = "eligible_set";
-      await cycle.save();
-  
-      return res.json({ message: "Eligibility set successfully" }); // ✅ ONLY ONE
-  
+
+        allocations.forEach((a, i) => {
+            a.status = i < eligibleCount ? "eligible" : "waiting";
+        });
+
+        await Promise.all(allocations.map(a => a.save()));
+
+        cycle.eligibleStudents = eligibleCount;
+        cycle.status = "eligible_set";
+        await cycle.save();
+
+        return res.json({ message: "Eligibility set successfully" }); // ✅ ONLY ONE
+
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: error.message });
+        console.error(error);
+        return res.status(500).json({ message: error.message });
     }
-  };
+};
 
 
 // ================= OPEN SELECTION =================
