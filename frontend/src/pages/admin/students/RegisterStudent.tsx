@@ -17,13 +17,22 @@ export default function RegisterStudent() {
     try {
       await API.post("/auth/register", {
         ...form,
-        roomNumber: String(form.roomNumber)
+        roomNumber: formatRoom(form.roomNumber)
       });
       console.log(form);
       alert("Student Registered");
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const formatRoom = (input) => {
+    if (input.includes("-")) return input; // already formatted
+  
+    const floor = input[0];
+    const room = input.slice(1);
+  
+    return `${floor}-${room.padStart(3, "0")}`;
   };
 
   return (
