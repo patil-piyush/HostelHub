@@ -73,3 +73,5 @@ sequelize.authenticate()
 .catch((err) => {
     console.error("DB ERROR:", err);
 });
+
+console.log("Auth Routes:", authRoutes);

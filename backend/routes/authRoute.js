@@ -40,6 +40,6 @@ router.post("/admin/login", adminLogin);
 
 // admin logout
 router.post("/admin/logout", adminLogout);
-
+console.log("Auth routes file loaded");
 
 module.exports = router;
