@@ -1,94 +1,121 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 
 const adminController = require("../controllers/adminController");
 const allocationCycleController = require("../controllers/allocationCycleController");
 
 const { verifyAdmin } = require("../middleware/adminMiddleware");
+const { Room, Floor, Student } = require("../models");
 
 
-// ================= WARDEN MANAGEMENT =================
+// ================= DASHBOARD =================
+router.get("/dashboard", verifyAdmin, adminController.getDashboardData);
 
-// create warden
+
+// ================= WARDEN =================
 router.post("/wardens", verifyAdmin, adminController.registerWarden);
-
-// get wardens
 router.get("/wardens", verifyAdmin, adminController.getAllWardens);
-
-// update warden
 router.put("/wardens/:id", verifyAdmin, adminController.updateWarden);
-
-// delete warden
 router.delete("/wardens/:id", verifyAdmin, adminController.deleteWarden);
 
 
-
-// ================= STUDENT MANAGEMENT =================
-
-// get all students
+// ================= STUDENTS =================
 router.get("/students", verifyAdmin, adminController.getAllStudents);
 
-// change room number allocation
-router.post("/students/change-room", verifyAdmin, adminController.changeRoomNumber);
+// 🔥 UPDATED: USE roomId internally (NOT roomNumber)
+router.post("/students/change-room", verifyAdmin, adminController.changeStudentRoom);
 
-// student details
 router.get("/students/:id", verifyAdmin, adminController.getStudentById);
-
-// update student
 router.put("/students/:id", verifyAdmin, adminController.updateStudent);
-
-// delete student
 router.delete("/students/:id", verifyAdmin, adminController.deleteStudent);
 
 
-
-// ================= COMPLAINT MANAGEMENT =================
-
-// get complaints
+// ================= COMPLAINTS =================
 router.get("/complaints", verifyAdmin, adminController.getAllComplaints);
-
-// complaint details
 router.get("/complaints/:id", verifyAdmin, adminController.getComplaintById);
-
-// update complaint status
 router.put("/complaints/:id", verifyAdmin, adminController.updateComplaintStatus);
-
-// delete complaint
 router.delete("/complaints/:id", verifyAdmin, adminController.deleteComplaint);
-
-
-
-// ================= ACADEMIC MANAGEMENT =================
-
-// add CGPA
-router.post("/cgpa", verifyAdmin, adminController.addCgpaData);
-
 
 
 // ======================================================
 //            ALLOCATION CYCLE MANAGEMENT
 // ======================================================
 
-// create allocation cycle
+// CREATE
 router.post("/allocation-cycle", verifyAdmin, allocationCycleController.createCycle);
 
-// upload SGPA list
-router.post("/allocation-cycle/upload-sgpa", verifyAdmin, allocationCycleController.uploadSgpa);
+// GET
+router.get("/allocation-cycle/latest", verifyAdmin, allocationCycleController.getLatestCycle);
+router.get("/allocation-cycle", verifyAdmin, allocationCycleController.getAllCycles);
 
-// generate merit list
+// MERIT
 router.post("/allocation-cycle/generate-merit", verifyAdmin, allocationCycleController.generateMeritList);
+router.get("/allocation-cycle/:cycleId/merit-list", verifyAdmin, allocationCycleController.getMeritList);
 
-// set eligible students
+// ELIGIBILITY
 router.post("/allocation-cycle/set-eligible", verifyAdmin, allocationCycleController.setEligibleStudents);
 
-// open room selection
+// SELECTION
 router.post("/allocation-cycle/open-selection", verifyAdmin, allocationCycleController.openRoomSelection);
-
-// close room selection
 router.post("/allocation-cycle/close-selection", verifyAdmin, allocationCycleController.closeRoomSelection);
+router.post("/allocation-cycle/complete", verifyAdmin, allocationCycleController.completeCycle);
 
-// get merit list
-router.get("/allocation-cycle/:cycleId/merit-list", verifyAdmin, allocationCycleController.getMeritList);
+// CSV UPLOAD
+router.post("/allocation-cycle/upload-cgpa", verifyAdmin, upload.single("file"), adminController.uploadCgpaCsv);
+
+
+// ======================================================
+//                 ROOM FETCH (VISUALIZER)
+// ======================================================
+
+router.get("/rooms/:cycleId", verifyAdmin, async (req, res) => {
+  try {
+    const rooms = await Room.findAll({
+      where: { AllocationCycleId: req.params.cycleId },
+
+      include: [
+        {
+          model: Floor,
+          attributes: ["floorNumber"]
+        },
+        {
+          model: Student,
+          as: "Students",
+          attributes: ["id", "name", "PRN"],
+          required: false
+        }
+      ],
+
+      order: [
+        [Floor, "floorNumber", "ASC"],
+        ["roomNumber", "ASC"]
+      ]
+    });
+
+    // ✅ Normalize response
+    const formatted = rooms.map(room => ({
+      ...room.toJSON(),
+      Students: room.Students || [],
+      occupiedBeds: room.occupiedBeds || 0
+    }));
+
+    res.json(formatted);
+
+  } catch (err) {
+    console.error("ROOM FETCH ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
+// 🔥 USE THIS ONLY (PRIMARY API)
+router.post("/allocate-room", verifyAdmin, adminController.allocateRoom);
+
+// 🔥 REMOVE STUDENT FROM ROOM
+router.post("/remove-student-room", verifyAdmin, adminController.removeStudentFromRoom);
 
 
 module.exports = router;

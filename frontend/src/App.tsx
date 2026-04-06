@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AllocationProvider } from "@/context/AllocationContext";
 
 // Public pages
 import LandingPage from "./pages/LandingPage";
@@ -26,27 +27,42 @@ import LeaveApproval from "./pages/warden/LeaveApproval";
 import WardenComplaints from "./pages/warden/WardenComplaints";
 
 // Admin pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import ManageStudents from "./pages/admin/ManageStudents";
-import UploadCGPA from "./pages/admin/UploadCGPA";
+import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
+import ManageStudents from "./pages/admin/students/ManageStudents";
+import RegisterStudent from "./pages/admin/students/RegisterStudent";
+import AllocationHub from "./pages/admin/allocation/AllocationHub";
+import ManageWardens from "./pages/admin/wardens/ManageWardens";
+import RegisterWarden from "./pages/admin/wardens/RegisterWarden";
+import EditWarden from "./pages/admin/wardens/EditWarden";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
+function ProtectedRoute({
+  children,
+  allowedRoles
+}: {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}) {
   const { user, isAuthenticated } = useAuth();
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) return <Navigate to="/login" replace />;
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 }
 
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public */}
+
+      {/* PUBLIC */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Student */}
+      {/* STUDENT */}
       <Route path="/student" element={<ProtectedRoute allowedRoles={["student"]}><StudentDashboard /></ProtectedRoute>} />
       <Route path="/student/movement" element={<ProtectedRoute allowedRoles={["student"]}><MovementLog /></ProtectedRoute>} />
       <Route path="/student/leave" element={<ProtectedRoute allowedRoles={["student"]}><LeaveApplication /></ProtectedRoute>} />
@@ -54,22 +70,25 @@ function AppRoutes() {
       <Route path="/student/room" element={<ProtectedRoute allowedRoles={["student"]}><RoomAllocation /></ProtectedRoute>} />
       <Route path="/student/profile" element={<ProtectedRoute allowedRoles={["student"]}><StudentProfile /></ProtectedRoute>} />
       <Route path="/student/profile/edit" element={<ProtectedRoute allowedRoles={["student"]}><EditProfile /></ProtectedRoute>} />
-      {/* Warden */}
+
+      {/* WARDEN */}
       <Route path="/warden" element={<ProtectedRoute allowedRoles={["warden"]}><WardenDashboard /></ProtectedRoute>} />
       <Route path="/warden/movement" element={<ProtectedRoute allowedRoles={["warden"]}><WardenStudentMovement /></ProtectedRoute>} />
       <Route path="/warden/leave" element={<ProtectedRoute allowedRoles={["warden"]}><LeaveApproval /></ProtectedRoute>} />
       <Route path="/warden/complaints" element={<ProtectedRoute allowedRoles={["warden"]}><WardenComplaints /></ProtectedRoute>} />
-      {/* <Route path="/warden/reports" element={<ProtectedRoute allowedRoles={["warden"]}><WardenDashboard /></ProtectedRoute>} /> */}
 
-      {/* Admin */}
+      {/* ADMIN */}
       <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/students" element={<ProtectedRoute allowedRoles={["admin"]}><ManageStudents /></ProtectedRoute>} />
-      <Route path="/admin/cgpa" element={<ProtectedRoute allowedRoles={["admin"]}><UploadCGPA /></ProtectedRoute>} />
-      <Route path="/admin/rooms" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
-      <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><ManageStudents /></ProtectedRoute>} />
-      <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/register-student" element={<ProtectedRoute allowedRoles={["admin"]}><RegisterStudent /></ProtectedRoute>} />
+      <Route path="/admin/allocation" element={<ProtectedRoute allowedRoles={["admin"]}><AllocationHub /></ProtectedRoute>} />
+      <Route path="/admin/wardens" element={<ProtectedRoute allowedRoles={["admin"]}><ManageWardens /></ProtectedRoute>} />
+      <Route path="/admin/register-warden" element={<ProtectedRoute allowedRoles={["admin"]}><RegisterWarden /></ProtectedRoute>} />
+      <Route path="/admin/edit-warden/:id" element={<ProtectedRoute allowedRoles={["admin"]}><EditWarden /></ProtectedRoute>} />
 
+      {/* FALLBACK */}
       <Route path="*" element={<NotFound />} />
+
     </Routes>
   );
 }
@@ -77,13 +96,15 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <AllocationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AllocationProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

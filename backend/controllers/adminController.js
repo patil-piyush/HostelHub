@@ -1,4 +1,7 @@
 const bcrypt = require('bcryptjs');
+const csv = require("csv-parser");
+const fs = require("fs");
+const { StudentAllocation } = require("../models");
 
 const {
     Student,
@@ -144,92 +147,23 @@ exports.deleteWarden = async (req, res) => {
 
 
 // ================= STUDENT MANAGEMENT =================
-
 exports.getAllStudents = async (req, res) => {
-
     try {
-
         const students = await Student.findAll({
-            attributes: { exclude: ["password"] }
+            include: [
+                {
+                    model: Room,
+                    attributes: ["id", "roomNumber"]
+                }
+            ]
         });
-
         res.json(students);
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-
 };
 
 
-exports.changeRoomNumber = async (req, res) => {
-
-    try {
-        const { studentId, roomNumber } = req.body;
-
-        const student = await Student.findByPk(studentId);
-        if (!student) {
-            return res.status(404).json({
-                message: "Student not found"
-            });
-        }
-        
-        const newRoom = await Room.findOne({
-            where: { roomNumber }
-        });
-
-        if (!newRoom) {
-            return res.status(404).json({
-                message: "Room not found"
-            });
-        }
-
-        if (newRoom.occupiedBeds >= newRoom.capacity) {
-            return res.status(400).json({
-                message: "Room is full"
-            });
-        }
-
-        if (student.RoomId) {
-
-            const oldRoom = await Room.findByPk(student.RoomId);
-
-            if (oldRoom) {
-                oldRoom.occupiedBeds -= 1;
-                await oldRoom.save();
-            }
-
-        }
-
-        newRoom.occupiedBeds += 1;
-
-        if (newRoom.occupiedBeds === newRoom.capacity) {
-            newRoom.status = "full";
-        }
-
-        await newRoom.save();
-
-        student.RoomId = newRoom.id;
-
-        await student.save();
-
-        res.json({
-            message: "Student room updated successfully"
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
-    }
-
-};
 
 
 exports.getStudentById = async (req, res) => {
@@ -326,70 +260,72 @@ exports.deleteStudent = async (req, res) => {
 // ================= ROOM CHANGE (ADMIN POWER) =================
 
 exports.changeStudentRoom = async (req, res) => {
-
     try {
 
-        const { studentId, roomNumber } = req.body;
+        const { PRN, roomId } = req.body;
 
-        const student = await Student.findByPk(studentId);
+        const student = await Student.findOne({ where: { PRN } });
 
         if (!student) {
-            return res.status(404).json({
-                message: "Student not found"
-            });
+            return res.status(404).json({ message: "Student not found" });
         }
 
-        const newRoom = await Room.findOne({
-            where: { roomNumber }
-        });
+        const newRoom = await Room.findByPk(roomId);
 
         if (!newRoom) {
-            return res.status(404).json({
-                message: "Room not found"
-            });
+            return res.status(404).json({ message: "Room not found" });
         }
 
-        if (newRoom.occupiedBeds >= newRoom.capacity) {
-            return res.status(400).json({
-                message: "Room is full"
-            });
-        }
-
+        // REMOVE FROM OLD ROOM
         if (student.RoomId) {
-
             const oldRoom = await Room.findByPk(student.RoomId);
 
             if (oldRoom) {
-                oldRoom.occupiedBeds -= 1;
+                const oldCount = await Student.count({
+                    where: { RoomId: oldRoom.id }
+                });
+
+                oldRoom.occupiedBeds = Math.max(0, oldCount - 1);
+
+                if (oldRoom.occupiedBeds < oldRoom.capacity) {
+                    oldRoom.status = "available";
+                }
+
                 await oldRoom.save();
             }
-
         }
 
-        newRoom.occupiedBeds += 1;
+        // CHECK NEW ROOM
+        const currentCount = await Student.count({
+            where: { RoomId: newRoom.id }
+        });
 
-        if (newRoom.occupiedBeds === newRoom.capacity) {
-            newRoom.status = "full";
+        if (currentCount >= newRoom.capacity) {
+            return res.status(400).json({ message: "Room is full" });
         }
+
+        // ASSIGN ROOM
+        student.RoomId = newRoom.id;
+        await student.save();
+
+        // SYNC ROOM
+        const updatedCount = await Student.count({
+            where: { RoomId: newRoom.id }
+        });
+
+        newRoom.occupiedBeds = updatedCount;
+
+        newRoom.status =
+            updatedCount >= newRoom.capacity ? "full" : "available";
 
         await newRoom.save();
 
-        student.RoomId = newRoom.id;
-
-        await student.save();
-
-        res.json({
-            message: "Student room updated successfully"
-        });
+        res.json({ message: "Student room updated successfully" });
 
     } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        });
-
+        console.error("CHANGE ROOM ERROR:", error);
+        res.status(500).json({ error: error.message });
     }
-
 };
 
 
@@ -564,4 +500,254 @@ exports.addCgpaData = async (req, res) => {
 
     }
 
+};
+
+
+
+
+exports.getDashboardData = async (req, res) => {
+    try {
+        // ================= BASIC COUNTS =================
+        const totalStudents = await Student.count();
+        const totalWardens = await Warden.count();
+
+        const rooms = await Room.findAll();
+
+        let totalRooms = rooms.length;
+        let occupiedBeds = 0;
+        let totalBeds = 0;
+
+        rooms.forEach((room) => {
+            occupiedBeds += room.occupiedBeds;
+            totalBeds += room.capacity;
+        });
+
+        const occupancyRate =
+            totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+        // ================= CGPA DISTRIBUTION =================
+        const students = await Student.findAll();
+
+        const cgpaRanges = {
+            "9-10": 0,
+            "8-9": 0,
+            "7-8": 0,
+            "6-7": 0,
+            "<6": 0,
+        };
+
+        students.forEach((s) => {
+            const cg = s.CGPA || 0;
+
+            if (cg >= 9) cgpaRanges["9-10"]++;
+            else if (cg >= 8) cgpaRanges["8-9"]++;
+            else if (cg >= 7) cgpaRanges["7-8"]++;
+            else if (cg >= 6) cgpaRanges["6-7"]++;
+            else cgpaRanges["<6"]++;
+        });
+
+        const cgpaData = Object.keys(cgpaRanges).map((key) => ({
+            range: key,
+            count: cgpaRanges[key],
+        }));
+
+        // ================= BLOCK OCCUPANCY =================
+        // NOTE: using floor as block
+        const blockMap = {};
+
+        rooms.forEach((room) => {
+            const block = `Block ${room.FloorId || "X"}`;
+
+            if (!blockMap[block]) {
+                blockMap[block] = { block, total: 0, occupied: 0 };
+            }
+
+            blockMap[block].total += room.capacity;
+            blockMap[block].occupied += room.occupiedBeds;
+        });
+
+        const occupancyData = Object.values(blockMap);
+
+        // ================= RECENT ACTIVITY =================
+        const complaints = await Complaint.findAll({
+            order: [["createdAt", "DESC"]],
+            limit: 5,
+        });
+
+        const recentActions = complaints.map((c) => ({
+            action: `Complaint: ${c.title || "New complaint"}`,
+            by: "Student",
+            time: new Date(c.createdAt).toLocaleString(),
+            icon: "🛠️",
+        }));
+
+        // ================= FINAL RESPONSE =================
+        res.json({
+            stats: {
+                totalStudents,
+                totalRooms,
+                occupiedBeds,
+                occupancyRate,
+                totalWardens,
+            },
+            cgpaData,
+            occupancyData,
+            recentActions,
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+
+
+exports.uploadCgpaCsv = async (req, res) => {
+    try {
+        const results = [];
+
+        fs.createReadStream(req.file.path)
+            .pipe(csv())
+            .on("data", (data) => results.push(data))
+            .on("end", async () => {
+
+                for (const row of results) {
+                    const student = await Student.findOne({
+                        where: { PRN: row.PRN }
+                    });
+
+                    if (student) {
+                        student.CGPA = parseFloat(row.CGPA);
+                        student.branch = row.Branch;
+                        student.year = parseInt(row.Year);
+                        await student.save();
+                    }
+                }
+
+                res.json({ message: "CSV uploaded successfully" });
+            });
+
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+// ================= ROOM ALLOCATION =================
+
+exports.allocateRoom = async (req, res) => {
+    try {
+
+        const { studentId, roomId, cycleId } = req.body;
+
+        const student = await Student.findByPk(studentId);
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        const room = await Room.findByPk(roomId);
+        if (!room) {
+            return res.status(404).json({ message: "Room not found" });
+        }
+
+        if (room.AllocationCycleId != cycleId) {
+            return res.status(400).json({ message: "Invalid cycle room" });
+        }
+
+        // REMOVE FROM OLD ROOM
+        if (student.RoomId) {
+            const oldRoom = await Room.findByPk(student.RoomId);
+
+            if (oldRoom) {
+                const oldCount = await Student.count({
+                    where: { RoomId: oldRoom.id }
+                });
+
+                oldRoom.occupiedBeds = Math.max(0, oldCount - 1);
+
+                oldRoom.status =
+                    oldRoom.occupiedBeds < oldRoom.capacity
+                        ? "available"
+                        : "full";
+
+                await oldRoom.save();
+            }
+        }
+
+        // CHECK CAPACITY
+        const currentCount = await Student.count({
+            where: { RoomId: room.id }
+        });
+
+        if (currentCount >= room.capacity) {
+            return res.status(400).json({ message: "Room is full" });
+        }
+
+        // ASSIGN
+        student.RoomId = room.id;
+        await student.save();
+
+        // SYNC ROOM
+        const updatedCount = await Student.count({
+            where: { RoomId: room.id }
+        });
+
+        room.occupiedBeds = updatedCount;
+
+        room.status =
+            updatedCount >= room.capacity ? "full" : "available";
+
+        await room.save();
+
+        res.json({ message: "Room allocated successfully" });
+
+    } catch (error) {
+        console.error("ALLOCATE ERROR:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+
+// ================= REMOVE STUDENT FROM ROOM =================
+
+exports.removeStudentFromRoom = async (req, res) => {
+    try {
+
+        const { studentId } = req.body;
+
+        const student = await Student.findByPk(studentId);
+
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        if (!student.RoomId) {
+            return res.status(400).json({ message: "No room assigned" });
+        }
+
+        const room = await Room.findByPk(student.RoomId);
+
+        student.RoomId = null;
+        await student.save();
+
+        if (room) {
+            const updatedCount = await Student.count({
+                where: { RoomId: room.id }
+            });
+
+            room.occupiedBeds = updatedCount;
+
+            room.status =
+                updatedCount >= room.capacity ? "full" : "available";
+
+            await room.save();
+        }
+
+        res.json({ message: "Student removed from room" });
+
+    } catch (error) {
+        console.error("REMOVE ERROR:", error);
+        res.status(500).json({ message: error.message });
+    }
 };

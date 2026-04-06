@@ -43,6 +43,7 @@ const AllocationCycle = sequelize.define('AllocationCycle', {
         type:DataTypes.ENUM(
             'draft',
             'merit_generated',
+            'eligible_set',   
             'selection_open',
             'selection_closed',
             'completed'

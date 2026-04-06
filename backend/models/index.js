@@ -24,8 +24,8 @@ Room.belongsTo(AllocationCycle);
 
 
 // STUDENT ROOM
-Room.hasMany(Student);
-Student.belongsTo(Room);
+Room.hasMany(Student, { as: "Students", foreignKey: "RoomId" });
+Student.belongsTo(Room, { foreignKey: "RoomId" });
 
 
 // MERIT LIST
