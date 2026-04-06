@@ -17,7 +17,7 @@ export default function RegisterStudent() {
     try {
       await API.post("/auth/register", {
         ...form,
-        roomNumber: Number(form.roomNumber)
+        roomNumber: String(form.roomNumber)
       });
       console.log(form);
       alert("Student Registered");
