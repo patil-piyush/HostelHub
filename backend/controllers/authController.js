@@ -10,7 +10,7 @@ const sequelize = require('../config/database');
 // =========================
 
 exports.userRegister = async (req, res) => {
-
+    console.log("REGISTER HIT");
     const transaction = await sequelize.transaction();
 
     try {
