@@ -1,0 +1,20 @@
+{
+    "routes": [
+      {
+        "src": "^/api/(.*)",
+        "dest": "https://hostelhub-m1cl.onrender.com/api/$1"
+      },
+      {
+        "src": "^/assets/(.*)",
+        "dest": "/assets/$1"
+      },
+      {
+        "src": "^/.*\\.(js|css|png|jpg|svg|ico)$",
+        "dest": "/$&"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/index.html"
+      }
+    ]
+  }
