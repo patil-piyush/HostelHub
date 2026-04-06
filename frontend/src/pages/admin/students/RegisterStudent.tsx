@@ -27,7 +27,13 @@ export default function RegisterStudent() {
   };
 
   const formatRoom = (input) => {
-    if (input.includes("-")) return input; // already formatted
+    if (!input) return "";
+  
+    if (input.includes("-")) return input;
+  
+    if (input.length < 3) {
+      throw new Error("Invalid room format");
+    }
   
     const floor = input[0];
     const room = input.slice(1);

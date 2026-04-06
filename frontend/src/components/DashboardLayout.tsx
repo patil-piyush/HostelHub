@@ -28,16 +28,15 @@ const navByRole: Record<string, NavItem[]> = {
     { label: "Student Movement", href: "/warden/movement", icon: MoveRight },
     { label: "Leave Requests", href: "/warden/leave", icon: FileText },
     { label: "Complaints", href: "/warden/complaints", icon: MessageSquare },
-    // ❌ removed broken route "/warden/reports"
+    // removed broken route "/warden/reports"
   ],
 
   admin: [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Manage Students", href: "/admin/students", icon: Users },
-    { label: "Register Student", href: "/admin/register-student", icon: User },
     { label: "Manage Wardens", href: "/admin/wardens", icon: Shield },
 
-    // 🔥 MAIN FEATURE (REPLACEMENT)
+    // MAIN FEATURE (REPLACEMENT)
     { label: "Allocation Hub", href: "/admin/allocation", icon: BedDouble },
 
     // optional future pages
