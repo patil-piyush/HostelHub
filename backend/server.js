@@ -19,6 +19,7 @@ const wardenRoutes = require('./routes/wardenRoutes');
 // Initialize Express app
 const app = express();
 
+console.log("Auth Routes:", authRoutes);
 
 // Middleware
 app.use(cors({
@@ -73,5 +74,3 @@ sequelize.authenticate()
 .catch((err) => {
     console.error("DB ERROR:", err);
 });
-
-console.log("Auth Routes:", authRoutes);
