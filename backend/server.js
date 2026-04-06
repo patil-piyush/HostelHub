@@ -19,7 +19,6 @@ const wardenRoutes = require('./routes/wardenRoutes');
 // Initialize Express app
 const app = express();
 
-console.log("Auth Routes:", authRoutes);
 
 // Middleware
 app.use(cors({

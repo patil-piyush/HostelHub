@@ -15,7 +15,11 @@ export default function RegisterStudent() {
 
   const handleSubmit = async () => {
     try {
-      await API.post("auth/register", form);
+      await API.post("auth/register", {
+        ...form,
+        roomNumber: Number(form.roomNumber)
+      });
+      console.log(form);
       alert("Student Registered");
     } catch (err) {
       console.error(err);
