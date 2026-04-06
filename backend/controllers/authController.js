@@ -10,7 +10,7 @@ const sequelize = require('../config/database');
 // =========================
 
 exports.userRegister = async (req, res) => {
-    
+    console.log("REQ BODY:", req.body);
     const transaction = await sequelize.transaction();
 
     try {
@@ -41,12 +41,14 @@ exports.userRegister = async (req, res) => {
         });
 
         if (!room) {
+            console.log(`Room with number ${roomNumber} not found`);
             return res.status(404).json({
                 message: 'Room not found'
             });
         }
 
         if (room.occupiedBeds >= room.capacity) {
+            console.log(`Room with number ${roomNumber} is already full`);
             return res.status(400).json({
                 message: 'Room already full'
             });
@@ -81,7 +83,7 @@ exports.userRegister = async (req, res) => {
     } catch (error) {
 
         await transaction.rollback();
-
+        console.log("Error during registration:", error);
         res.status(500).json({
             message: 'Server error',
             error: error.message
