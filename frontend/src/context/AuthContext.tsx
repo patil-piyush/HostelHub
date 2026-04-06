@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // ✅ Axios instance
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.VITE_BACKEND_URL || "http://localhost:5000/api",
 });
 
 // ✅ Attach token
