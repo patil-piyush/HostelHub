@@ -4,7 +4,6 @@ import API from "@/api";
 
 export default function WardenStudentMovement() {
   const [movement, setMovement] = useState([]);
-  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchMovement();
@@ -19,6 +18,7 @@ export default function WardenStudentMovement() {
     }
   };
 
+  // ✅ Format Date
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("en-IN", {
       day: "numeric",
@@ -27,55 +27,56 @@ export default function WardenStudentMovement() {
     });
   };
 
+  // ✅ Status Label
   const getReadableStatus = (status: string) =>
     status === "OUT" ? "On Leave" : "Returned";
 
+  // ✅ Status Styling
   const getStatusClass = (status: string) => {
     return status === "OUT"
       ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
       : "bg-green-500/10 text-green-400 border-green-500/20";
   };
 
-  // ✅ FILTERED DATA
-  const filteredMovement = showAll
-    ? movement
-    : movement.filter((m: any) => m.status === "OUT");
+  // ✅ SORT: OUT first, then IN
+  const sortedMovement = [...movement].sort((a: any, b: any) => {
+    if (a.status === "OUT" && b.status !== "OUT") return -1;
+    if (a.status !== "OUT" && b.status === "OUT") return 1;
+    return 0;
+  });
+
+  // ✅ COUNT ONLY OUT STUDENTS
+  const outsideCount = movement.filter((m: any) => m.status === "OUT").length;
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
 
         {/* 🔥 HEADER */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Student Movement
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Monitor real-time hostel movement activity
-            </p>
-          </div>
-
-          {/* Toggle */}
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition"
-          >
-            {showAll ? "Show Only Outside" : "Show All"}
-          </button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Student Movement
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Monitor all student movement (Outside & Returned)
+          </p>
         </div>
 
-        {/* 🔥 STATS CARD */}
+        {/* 🔥 STATS */}
         <div className="grid grid-cols-2 gap-4">
           <div className="card-elevated p-4 rounded-xl">
-            <p className="text-sm text-muted-foreground">Currently Outside</p>
+            <p className="text-sm text-muted-foreground">
+              Currently Outside
+            </p>
             <h2 className="text-2xl font-bold text-orange-400">
-              {movement.filter((m: any) => m.status === "OUT").length}
+              {outsideCount}
             </h2>
           </div>
 
           <div className="card-elevated p-4 rounded-xl">
-            <p className="text-sm text-muted-foreground">Total Logs</p>
+            <p className="text-sm text-muted-foreground">
+              Total Movement Logs
+            </p>
             <h2 className="text-2xl font-bold text-foreground">
               {movement.length}
             </h2>
@@ -87,12 +88,10 @@ export default function WardenStudentMovement() {
 
           {/* Top Bar */}
           <div className="px-6 py-4 border-b flex justify-between items-center">
-            <h3 className="font-semibold">
-              {showAll ? "All Movement Logs" : "Currently Outside"}
-            </h3>
+            <h3 className="font-semibold">All Movement Logs</h3>
 
             <span className="text-xs px-3 py-1 rounded-full bg-muted text-muted-foreground">
-              {filteredMovement.length} records
+              {movement.length} records
             </span>
           </div>
 
@@ -103,7 +102,10 @@ export default function WardenStudentMovement() {
               <thead>
                 <tr className="border-b bg-muted/30">
                   {["Student", "Out Time", "In Time", "Status"].map((h) => (
-                    <th key={h} className="px-6 py-3 text-left text-xs uppercase text-muted-foreground">
+                    <th
+                      key={h}
+                      className="px-6 py-3 text-left text-xs uppercase text-muted-foreground"
+                    >
                       {h}
                     </th>
                   ))}
@@ -111,23 +113,25 @@ export default function WardenStudentMovement() {
               </thead>
 
               <tbody>
-                {filteredMovement.length > 0 ? (
-                  filteredMovement.map((m: any, i) => (
+                {sortedMovement.length > 0 ? (
+                  sortedMovement.map((m: any, i) => (
                     <tr
                       key={i}
-                      className="border-b hover:bg-muted/20 transition"
+                      className={`border-b hover:bg-muted/20 transition ${
+                        m.status === "OUT" ? "bg-orange-500/5" : ""
+                      }`}
                     >
                       {/* Student */}
                       <td className="px-6 py-4 font-medium">
                         {m.Student?.name || "Unknown"}
                       </td>
 
-                      {/* Out */}
+                      {/* Out Time */}
                       <td className="px-6 py-4 text-muted-foreground">
                         {formatDate(m.outTime)}
                       </td>
 
-                      {/* In */}
+                      {/* In Time */}
                       <td className="px-6 py-4 text-muted-foreground">
                         {m.inTime ? formatDate(m.inTime) : "—"}
                       </td>
@@ -144,8 +148,11 @@ export default function WardenStudentMovement() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="text-center py-10 text-muted-foreground">
-                      No movement data available!
+                    <td
+                      colSpan={4}
+                      className="text-center py-10 text-muted-foreground"
+                    >
+                      No movement data available 
                     </td>
                   </tr>
                 )}
