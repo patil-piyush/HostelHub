@@ -35,13 +35,13 @@ export default function WardenDashboard() {
       setLeaves(leavesRes.data.slice(0, 4));
       setMovement(movementRes.data);
 
-      // ✅ REAL DATA FOR GRAPH (based on movement)
+      //  REAL DATA FOR GRAPH (based on movement)
       const daysMap: any = {
         Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0
       };
 
       movementRes.data.forEach((m: any) => {
-        const day = new Date(m.startDate).toLocaleDateString("en-US", { weekday: "short" });
+        const day = new Date(m.outTime).toLocaleDateString("en-US", { weekday: "short" });
         daysMap[day] += 1;
       });
 
@@ -57,7 +57,7 @@ export default function WardenDashboard() {
     }
   };
 
-  // ✅ BETTER STATUS STYLING
+  //  BETTER STATUS STYLING
   const getStatusClass = (status: string) => {
     switch (status) {
       case "Approved":
@@ -105,8 +105,8 @@ export default function WardenDashboard() {
                 <XAxis dataKey="day" />
                 <YAxis />
                 <Tooltip />
-                {/* ✅ COLOR FIX */}
-                <Bar dataKey="students" fill="#facc15" radius={[4,4,0,0]} />
+                {/*  COLOR FIX */}
+                <Bar dataKey="students" fill="#facc15" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -151,7 +151,7 @@ export default function WardenDashboard() {
           <table className="w-full">
             <thead>
               <tr>
-                {["Student","Start","End","Status"].map(h => (
+                {["Student", "Start", "End", "Status"].map(h => (
                   <th key={h} className="px-6 py-3 text-left">{h}</th>
                 ))}
               </tr>
@@ -160,16 +160,16 @@ export default function WardenDashboard() {
             <tbody>
               {movement.map((m: any, i) => (
                 <tr key={i}>
-                  <td className="px-6 py-4">{m.student}</td>
+                  <td className="px-6 py-4">{m.Student?.name || "Unknown"}</td>
 
-                  {/* ✅ DATE FIX */}
-                  <td className="px-6 py-4">{formatDate(m.startDate)}</td>
-                  <td className="px-6 py-4">{formatDate(m.endDate)}</td>
+                  {/*  DATE FIX */}
+                  <td className="px-6 py-4">{formatDate(m.outTime)}</td>
+                  <td className="px-6 py-4">{m.inTime ? formatDate(m.inTime) : "Not Returned"}</td>
 
-                  {/* ✅ BETTER STATUS */}
+                  {/*  BETTER STATUS */}
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 rounded-full text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                      {m.status}
+                      {m.status === "OUT" ? "On Leave" : "Returned"}
                     </span>
                   </td>
                 </tr>
