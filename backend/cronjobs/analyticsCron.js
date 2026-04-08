@@ -6,7 +6,7 @@ const {
   Leave, 
   Room,
   Analytics 
-} = require('./models');
+} = require('../models');
 
 const { Op } = require('sequelize');
 
