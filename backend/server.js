@@ -7,7 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { sequelize } = require('./models');
-const startAnalyticsCron = require('./cronjobs/analyticsCron');
+const {startAnalyticsCron} = require('./cronjobs/analyticsCron');
 
 
 // Import routes
