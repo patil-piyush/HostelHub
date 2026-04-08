@@ -1,5 +1,4 @@
-const { Warden, Complaint, Leave, Student } = require('../models');
-
+const { Warden, Complaint, Leave, Student, Movement } = require('../models');
 /* =====================================================
                     PROFILE
 ===================================================== */
