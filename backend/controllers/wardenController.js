@@ -245,7 +245,7 @@ exports.updateLeaveApplicationStatus = async (req, res) => {
                 STUDENT MOVEMENT (NEW)
 ===================================================== */
 
-const { Movement, Student } = require('../models');
+
 
 exports.getStudentMovement = async (req, res) => {
     try {
