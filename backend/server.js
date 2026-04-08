@@ -7,6 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { sequelize } = require('./models');
+const startAnalyticsCron = require('./cronjobs/analyticsCron');
 
 
 // Import routes
@@ -63,9 +64,12 @@ sequelize.authenticate()
 .then(() => {
     console.log("Database connected successfully");
 
-    return sequelize.sync(); // no alter
+    return sequelize.sync();
 })
 .then(() => {
+
+    startAnalyticsCron(); 
+
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });

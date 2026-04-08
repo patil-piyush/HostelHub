@@ -10,6 +10,8 @@ const RoomSelection = require('./RoomSelection');
 const Movement = require('./Movement');
 const Leave = require('./Leave');
 const Complaint = require('./Complaint');
+const Analytics = require('./Analytics');
+
 
 
 // ROOM RELATIONS
@@ -76,5 +78,6 @@ module.exports = {
     RoomSelection,
     Movement,
     Leave,
-    Complaint
+    Complaint,
+    Analytics
 };
