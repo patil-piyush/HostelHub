@@ -4,6 +4,7 @@ import API from "@/api";
 
 export default function WardenStudentMovement() {
   const [movement, setMovement] = useState([]);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchMovement();
@@ -18,7 +19,6 @@ export default function WardenStudentMovement() {
     }
   };
 
-  // ✅ HUMAN READABLE DATE
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("en-IN", {
       day: "numeric",
@@ -27,43 +27,72 @@ export default function WardenStudentMovement() {
     });
   };
 
-  // ✅ BETTER STATUS BADGE
+  const getReadableStatus = (status: string) =>
+    status === "OUT" ? "On Leave" : "Returned";
+
   const getStatusClass = (status: string) => {
-    switch (status) {
-      case "On Leave":
-        return "px-3 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20";
-      case "Returned":
-        return "px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20";
-      default:
-        return "px-3 py-1 rounded-full text-xs font-medium bg-gray-500/10 text-gray-400";
-    }
+    return status === "OUT"
+      ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+      : "bg-green-500/10 text-green-400 border-green-500/20";
   };
 
-  const getReadableStatus = (status: string) => {
-    return status === "OUT" ? "On Leave" : "Returned";
-  };
+  // ✅ FILTERED DATA
+  const filteredMovement = showAll
+    ? movement
+    : movement.filter((m: any) => m.status === "OUT");
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
 
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Student Movement</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Track students currently outside hostel
-          </p>
+        {/* 🔥 HEADER */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Student Movement
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Monitor real-time hostel movement activity
+            </p>
+          </div>
+
+          {/* Toggle */}
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition"
+          >
+            {showAll ? "Show Only Outside" : "Show All"}
+          </button>
         </div>
 
-        {/* Table Card */}
+        {/* 🔥 STATS CARD */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="card-elevated p-4 rounded-xl">
+            <p className="text-sm text-muted-foreground">Currently Outside</p>
+            <h2 className="text-2xl font-bold text-orange-400">
+              {movement.filter((m: any) => m.status === "OUT").length}
+            </h2>
+          </div>
+
+          <div className="card-elevated p-4 rounded-xl">
+            <p className="text-sm text-muted-foreground">Total Logs</p>
+            <h2 className="text-2xl font-bold text-foreground">
+              {movement.length}
+            </h2>
+          </div>
+        </div>
+
+        {/* 🔥 TABLE */}
         <div className="card-elevated rounded-xl overflow-hidden">
 
           {/* Top Bar */}
-          <div className="px-6 py-4 border-b border-border flex justify-between items-center">
-            <h3 className="font-semibold text-foreground">Currently Outside</h3>
+          <div className="px-6 py-4 border-b flex justify-between items-center">
+            <h3 className="font-semibold">
+              {showAll ? "All Movement Logs" : "Currently Outside"}
+            </h3>
 
-            <span className="px-3 py-1 rounded-full text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20">
-              {movement.length} students
+            <span className="text-xs px-3 py-1 rounded-full bg-muted text-muted-foreground">
+              {filteredMovement.length} records
             </span>
           </div>
 
@@ -72,12 +101,9 @@ export default function WardenStudentMovement() {
             <table className="w-full">
 
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  {["Student", "Start", "End", "Status"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
-                    >
+                <tr className="border-b bg-muted/30">
+                  {["Student", "Out Time", "In Time", "Status"].map((h) => (
+                    <th key={h} className="px-6 py-3 text-left text-xs uppercase text-muted-foreground">
                       {h}
                     </th>
                   ))}
@@ -85,32 +111,41 @@ export default function WardenStudentMovement() {
               </thead>
 
               <tbody>
-                {movement.length > 0 ? (
-                  movement.map((m: any, i) => (
-                    <tr key={i}>
-                      <td>{m.Student?.name || "Unknown"}</td>
-
-                      <td>{formatDate(m.outTime)}</td>
-
-                      <td>
-                        {m.inTime ? formatDate(m.inTime) : "Not Returned"}
+                {filteredMovement.length > 0 ? (
+                  filteredMovement.map((m: any, i) => (
+                    <tr
+                      key={i}
+                      className="border-b hover:bg-muted/20 transition"
+                    >
+                      {/* Student */}
+                      <td className="px-6 py-4 font-medium">
+                        {m.Student?.name || "Unknown"}
                       </td>
 
-                      <td>
-                        <span className={getStatusClass(getReadableStatus(m.status))}>
+                      {/* Out */}
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {formatDate(m.outTime)}
+                      </td>
+
+                      {/* In */}
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {m.inTime ? formatDate(m.inTime) : "—"}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 text-xs rounded-full border ${getStatusClass(m.status)}`}
+                        >
                           {getReadableStatus(m.status)}
                         </span>
                       </td>
                     </tr>
                   ))
                 ) : (
-                  // ✅ EMPTY STATE (IMPORTANT UX)
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-6 py-10 text-center text-sm text-muted-foreground"
-                    >
-                      No students currently outside 🚫
+                    <td colSpan={4} className="text-center py-10 text-muted-foreground">
+                      No movement data available!
                     </td>
                   </tr>
                 )}

@@ -85,7 +85,7 @@ export default function WardenDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard title="Students Outside" value={movement.length} icon={<Users />} accentColor="orange" />
+          <StatsCard title="Students Outside" value={movement.filter((m: any) => m.status === "OUT").length} icon={<Users />} accentColor="orange" />
           <StatsCard title="Pending Leaves" value={stats.pendingLeaves || 0} icon={<FileText />} accentColor="primary" />
           <StatsCard title="Active Complaints" value={stats.openComplaints || 0} icon={<MessageSquare />} accentColor="red" />
           <StatsCard title="Resolved Today" value={stats.resolvedComplaints || 0} icon={<CheckCircle />} accentColor="green" />
@@ -144,7 +144,7 @@ export default function WardenDashboard() {
           <div className="px-6 py-4 border-b flex justify-between">
             <h3 className="font-semibold">Currently Outside</h3>
             <span className="status-badge-inprogress">
-              {movement.length} students
+              {movement.filter((m: any) => m.status === "OUT").length} students
             </span>
           </div>
 
@@ -158,22 +158,24 @@ export default function WardenDashboard() {
             </thead>
 
             <tbody>
-              {movement.map((m: any, i) => (
-                <tr key={i}>
-                  <td className="px-6 py-4">{m.Student?.name || "Unknown"}</td>
+              {movement
+                .filter((m: any) => m.status === "OUT")
+                .map((m: any, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4">{m.Student?.name || "Unknown"}</td>
 
-                  {/*  DATE FIX */}
-                  <td className="px-6 py-4">{formatDate(m.outTime)}</td>
-                  <td className="px-6 py-4">{m.inTime ? formatDate(m.inTime) : "Not Returned"}</td>
+                    {/*  DATE FIX */}
+                    <td className="px-6 py-4">{formatDate(m.outTime)}</td>
+                    <td className="px-6 py-4">{m.inTime ? formatDate(m.inTime) : "Not Returned"}</td>
 
-                  {/*  BETTER STATUS */}
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 rounded-full text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                      {m.status === "OUT" ? "On Leave" : "Returned"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    {/*  BETTER STATUS */}
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                        {m.status === "OUT" ? "On Leave" : "Returned"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
