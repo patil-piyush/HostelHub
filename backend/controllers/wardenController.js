@@ -245,30 +245,23 @@ exports.updateLeaveApplicationStatus = async (req, res) => {
                 STUDENT MOVEMENT (NEW)
 ===================================================== */
 
+const { Movement, Student } = require('../models');
+
 exports.getStudentMovement = async (req, res) => {
     try {
 
-        // NOTE: Replace with actual Movement model if exists
-        // Temporary: using approved leaves as movement
-
-        const leaves = await Leave.findAll({
-            where: { status: "Approved" },
+        const movements = await Movement.findAll({
             include: [{
                 model: Student,
                 attributes: ["id", "name", "PRN"]
-            }]
+            }],
+            order: [["createdAt", "DESC"]]
         });
 
-        const movement = leaves.map(l => ({
-            student: l.Student.name,
-            startDate: l.startDate,
-            endDate: l.endDate,
-            status: "On Leave"
-        }));
-
-        res.json(movement);
+        res.json(movements);
 
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 };

@@ -39,6 +39,10 @@ export default function WardenStudentMovement() {
     }
   };
 
+  const getReadableStatus = (status: string) => {
+    return status === "OUT" ? "On Leave" : "Returned";
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -53,7 +57,7 @@ export default function WardenStudentMovement() {
 
         {/* Table Card */}
         <div className="card-elevated rounded-xl overflow-hidden">
-          
+
           {/* Top Bar */}
           <div className="px-6 py-4 border-b border-border flex justify-between items-center">
             <h3 className="font-semibold text-foreground">Currently Outside</h3>
@@ -83,27 +87,18 @@ export default function WardenStudentMovement() {
               <tbody>
                 {movement.length > 0 ? (
                   movement.map((m: any, i) => (
-                    <tr
-                      key={i}
-                      className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-foreground">
-                        {m.student}
+                    <tr key={i}>
+                      <td>{m.Student?.name || "Unknown"}</td>
+
+                      <td>{formatDate(m.outTime)}</td>
+
+                      <td>
+                        {m.inTime ? formatDate(m.inTime) : "Not Returned"}
                       </td>
 
-                      {/* ✅ FIXED DATE */}
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {formatDate(m.startDate)}
-                      </td>
-
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {formatDate(m.endDate)}
-                      </td>
-
-                      {/* ✅ FIXED BADGE */}
-                      <td className="px-6 py-4">
-                        <span className={getStatusClass(m.status)}>
-                          {m.status}
+                      <td>
+                        <span className={getStatusClass(getReadableStatus(m.status))}>
+                          {getReadableStatus(m.status)}
                         </span>
                       </td>
                     </tr>
